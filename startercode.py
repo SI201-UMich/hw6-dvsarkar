@@ -261,7 +261,7 @@ class TestHomeworkDogAPI(unittest.TestCase):
         # If you want the tests to clean up after themselves, UNCOMMENT the lines below.
         #
         # if os.path.exists(self.test_cache_file):
-        #     os.remove(self.test_cache_file)
+        #    os.remove(self.test_cache_file)
         pass
 
     # -------------------------
