@@ -168,8 +168,19 @@ def get_groups_above_cutoff(cutoff, cache_file):
     RETURNS:
         A dictionary {group_uuid: count} for groups with count >= cutoff only.
     """
-
-    pass
+    cache = load_json(cache_file)
+    group_counts = {}
+ 
+    for entry in cache.values():
+        try:
+            group_id = entry['data']['relationships']['group']['data']['id']
+            if not group_id:
+                continue
+            group_counts[group_id] = group_counts.get(group_id, 0) + 1 #AI helped me understand why we need .get to handle missing keys and default to 0
+        except (KeyError, TypeError):
+            continue
+ 
+    return {gid: count for gid, count in group_counts.items() if count >= cutoff} #AI helpped me with this return statement to filter the groups based on the cutoff
 
 
 # Extra Credit
