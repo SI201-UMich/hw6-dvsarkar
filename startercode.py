@@ -36,7 +36,12 @@ def load_json(filename):
         A dictionary with the JSON data, OR an empty dictionary {} if the file
         cannot be opened or is not valid JSON.
     """
-    pass
+    try:
+        with open(filename, 'r', encoding='utf-8') as f: #AI Helped me used encoding utf-8 to ensure that the file is read correctly
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
 
 
 def create_cache(dictionary, filename):
@@ -51,7 +56,9 @@ def create_cache(dictionary, filename):
     RETURNS:
         None
     """
-    pass
+    with open(filename, 'w', encoding='utf-8') as f: 
+        json.dump(dictionary, f) #json.dump is used to convert dict to JSON, used AI Help
+
 
 
 def search_breed(breed_id):
@@ -68,7 +75,16 @@ def search_breed(breed_id):
         JSON body as a dict (with a top-level 'data' key on success), OR None if the
         request failed or the response does not represent a successful breed lookup.
     """
-    pass
+    url = f"https://dogapi.dog/api/v2/breeds/{breed_id}" #this is the URL format for the API request
+    try:
+        response = requests.get(url)
+        if response.status_code == 200: #AI helped me;200 is used to check if the request was successful
+            parsed = response.json()
+            if parsed.get('data') is not None:
+                return (parsed, url)
+        return None
+    except Exception: #Exception is used to catch any errors, debugged by AI
+        return None
 
 
 def update_cache(breed_ids, cache_file):
@@ -85,7 +101,22 @@ def update_cache(breed_ids, cache_file):
         A string: "Cached data for {percentage}% of breeds",
         where percentage = (successful_new_adds / len(breed_ids)) * 100.
     """
-    pass
+    cache = load_json(cache_file)
+    new_adds = 0
+ 
+    for breed_id in breed_ids:
+        url = f"https://dogapi.dog/api/v2/breeds/{breed_id}"
+        if url in cache:
+            continue #AI helped me undertand that continue is used to skip the rest of the loop for breeds already in cache
+        result = search_breed(breed_id)
+        if result is not None:
+            parsed, response_url = result
+            cache[response_url] = parsed
+            new_adds += 1
+ 
+    create_cache(cache, cache_file) #create_cache is used to save the updated cache to disk, AI helped me understand that we need to save the cache
+    percentage = (new_adds / len(breed_ids)) * 100
+    return f"Cached data for {percentage}% of breeds"
 
 
 def get_longest_lifespan_breed(cache_file):
@@ -100,6 +131,25 @@ def get_longest_lifespan_breed(cache_file):
         A tuple (breed_name, max_lifespan_integer) for the winning breed, OR the
         string "No breeds found" if no breed in the cache has a life.max value.
     """
+    cache = load_json(cache_file)
+    best_name = None
+    best_lifespan = None
+    for entry in cache.values():
+        try:
+            attributes = entry['data']['attributes']
+            name = attributes['name']
+            max_life = attributes['life']['max']
+            if not isinstance(max_life, int):
+                continue
+            if best_lifespan is None or max_life > best_lifespan or \
+               (max_life == best_lifespan and name < best_name):
+                best_name = name
+                best_lifespan = max_life
+        except (KeyError, TypeError): #AI helped me understand that we need to catch KeyError and TypeError to handle missing keys or wrong types in the JSON data
+            continue
+    if best_name is None:
+        return "No breeds found"
+    return (best_name, best_lifespan)
     pass
 
 
@@ -119,6 +169,7 @@ def get_groups_above_cutoff(cutoff, cache_file):
     RETURNS:
         A dictionary {group_uuid: count} for groups with count >= cutoff only.
     """
+    
     pass
 
 
